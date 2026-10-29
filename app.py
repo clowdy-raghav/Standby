@@ -72,10 +72,16 @@ def init_db():
                 FOREIGN KEY (booking_id) REFERENCES bookings(id)
             )
         """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS user_scores (
+            user_name TEXT PRIMARY KEY,
+            score INTEGER NOT NULL DEFAULT 50
+            CHECK (score BETWEEN 0 AND 100)
+            )
+        """)
         conn.commit()
     finally:
         conn.close()
-
 
 @app.get("/")
 def home():
@@ -135,6 +141,28 @@ def create_booking():
         # Lock writes while checking and creating the booking.
         conn.execute("BEGIN IMMEDIATE")
 
+        score_row = conn.execute(
+            "SELECT score FROM user_scores WHERE user_name = ?",
+            (user_name,)
+        ).fetchone()
+
+        if score_row is None:
+            conn.execute(
+                "INSERT INTO user_scores (user_name, score) VALUES (?, 50)",
+                (user_name,)
+            )
+            score = 50
+        else:
+            score = score_row["score"]
+
+        if score < 30:
+            conn.rollback()
+            return jsonify({
+            "error": "Your reliability score is too low to book.",
+            "reliability_score": score,
+            "minimum_score": 30
+        }), 403
+    
         conflict = conn.execute("""
             SELECT id
             FROM bookings
@@ -239,7 +267,7 @@ def claim_offer(offer_id):
     conn = get_db()
 
     try:
-        # Lock the database for this write transaction.
+        # Lock the database for this write transaction (took my most of the time T-T).
         conn.execute("BEGIN IMMEDIATE")
 
         offer = conn.execute("""
