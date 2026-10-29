@@ -225,6 +225,7 @@ def cancel_booking(booking_id):
         conn.close()
 
 
+
 @app.post("/api/offers/<int:offer_id>/claim")
 def claim_offer(offer_id):
     """Claim an available slot offer."""
@@ -238,7 +239,7 @@ def claim_offer(offer_id):
     conn = get_db()
 
     try:
-        # Start a write transaction so competing claims are serialized.
+        # Lock the database for this write transaction.
         conn.execute("BEGIN IMMEDIATE")
 
         offer = conn.execute("""
@@ -248,9 +249,9 @@ def claim_offer(offer_id):
         """, (offer_id,)).fetchone()
 
         if offer is None:
+            conn.rollback()
             return jsonify({"error": "Offer not found."}), 404
 
-        
         now = datetime.now(timezone.utc)
         expires_at = datetime.fromisoformat(offer["expires_at"])
 
@@ -264,58 +265,62 @@ def claim_offer(offer_id):
             return jsonify({"error": "Offer has expired."}), 410
 
         if offer["status"] != "available":
+            conn.rollback()
             return jsonify({
                 "error": "Offer is no longer available."
             }), 409
 
-            booking = conn.execute("""
-                SELECT id, slot_name, start_time, status
-                FROM bookings
-                WHERE id = ?
-            """, (offer["booking_id"],)).fetchone()
+        booking = conn.execute("""
+            SELECT id, slot_name, start_time, status
+            FROM bookings
+            WHERE id = ?
+        """, (offer["booking_id"],)).fetchone()
 
-            if booking is None or booking["status"] != "cancelled":
-                return jsonify({
-                    "error": "The original booking is not available to claim."
-                }), 409
-
-            # Prevent another active booking for the same slot and start time.
-            conflict = conn.execute("""
-                SELECT id
-                FROM bookings
-                WHERE slot_name = ?
-                AND start_time = ?
-                AND status = 'confirmed'
-                LIMIT 1
-            """, (booking["slot_name"], booking["start_time"])).fetchone()
-
-            if conflict is not None:
-                return jsonify({
-                    "error": "This slot has already been booked."
-                }), 409
-
-            conn.execute("""
-                UPDATE slot_offers
-                SET status = 'claimed', claimed_by = ?
-                WHERE id = ? AND status = 'available'
-            """, (claimed_by, offer_id))
-
-            cursor = conn.execute("""
-                INSERT INTO bookings (user_name, slot_name, start_time, status)
-                VALUES (?, ?, ?, 'confirmed')
-            """, (claimed_by, booking["slot_name"], booking["start_time"]))
-
-            conn.commit()
-
+        if booking is None or booking["status"] != "cancelled":
+            conn.rollback()
             return jsonify({
-                "message": "Slot claimed successfully.",
-                "offer_id": offer_id,
-                "booking_id": cursor.lastrowid,
-                "user_name": claimed_by,
-                "slot_name": booking["slot_name"],
-                "start_time": booking["start_time"],
-                "status": "confirmed"
-            }), 200
+                "error": "The original booking is not available to claim."
+            }), 409
+
+        # Prevent another active booking for this exact slot and start time.
+        conflict = conn.execute("""
+            SELECT id
+            FROM bookings
+            WHERE slot_name = ?
+            AND start_time = ?
+            AND status = 'confirmed'
+            LIMIT 1
+        """, (booking["slot_name"], booking["start_time"])).fetchone()
+
+        if conflict is not None:
+            conn.rollback()
+            return jsonify({
+                "error": "This slot has already been booked."
+            }), 409
+
+        # Claim the offer and create the new confirmed booking.
+        conn.execute("""
+            UPDATE slot_offers
+            SET status = 'claimed', claimed_by = ?
+            WHERE id = ? AND status = 'available'
+        """, (claimed_by, offer_id))
+
+        cursor = conn.execute("""
+            INSERT INTO bookings (user_name, slot_name, start_time, status)
+            VALUES (?, ?, ?, 'confirmed')
+        """, (claimed_by, booking["slot_name"], booking["start_time"]))
+
+        conn.commit()
+
+        return jsonify({
+            "message": "Slot claimed successfully.",
+            "offer_id": offer_id,
+            "booking_id": cursor.lastrowid,
+            "user_name": claimed_by,
+            "slot_name": booking["slot_name"],
+            "start_time": booking["start_time"],
+            "status": "confirmed"
+        }), 200
 
     except Exception:
         conn.rollback()
