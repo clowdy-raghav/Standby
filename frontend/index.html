@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#111827" />
+  <meta name="description" content="Standby — smarter makerspace booking, fair standby queues, and reliability-led access." />
+  <title>Standby — Makerspace access, without the wait</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Authentication / demo entry -->
+  <section id="loginScreen" class="login-screen">
+    <div class="login-visual">
+      <a class="brand brand-light" href="#" aria-label="Standby home">
+        <span class="brand-mark">S<span>·</span></span>
+        <span>standby<span class="brand-dot">.</span></span>
+      </a>
+
+      <div class="visual-copy">
+        <div class="eyebrow light-eyebrow">
+          <span class="pulse-dot"></span> THE MAKERSPACE, IN SYNC
+        </div>
+        <h1>Great ideas<br />shouldn’t have to<br /><em>wait in line.</em></h1>
+        <p>Book the tools you need. Join a fair standby queue. Build a track record that opens more doors.</p>
+      </div>
+
+      <div class="visual-bottom">
+        <div class="mini-stat"><strong>01</strong><span>Book smarter</span></div>
+        <div class="mini-stat"><strong>02</strong><span>Queue fairly</span></div>
+        <div class="mini-stat"><strong>03</strong><span>Build trust</span></div>
+        <span class="visual-orbit orbit-one"></span>
+        <span class="visual-orbit orbit-two"></span>
+      </div>
+    </div>
+
+    <div class="login-panel">
+      <div class="login-panel-inner">
+        <div class="mobile-brand">
+          <span class="brand-mark">S<span>·</span></span>
+          <span>standby<span class="brand-dot">.</span></span>
+        </div>
+
+        <div class="login-heading">
+          <span class="eyebrow">YOUR WORKSPACE AWAITS</span>
+          <h2>Welcome back<span class="brand-dot">.</span></h2>
+          <p>Sign in to make your next idea happen.</p>
+        </div>
+
+        <form id="loginForm" class="form-stack">
+          <label for="loginEmail">Email address</label>
+          <input id="loginEmail" name="email" type="email"
+            autocomplete="username" placeholder="you@college.edu" required />
+
+          <div class="label-row">
+            <label for="loginPassword">Password</label>
+            <span class="muted tiny">Demo password below</span>
+          </div>
+
+          <div class="password-wrap">
+            <input id="loginPassword" name="password" type="password"
+              autocomplete="current-password" placeholder="Enter your password" required />
+            <button id="togglePassword" class="password-toggle"
+              type="button" aria-label="Show password">Show</button>
+          </div>
+
+          <p id="loginError" class="form-error" role="alert" hidden></p>
+
+          <button class="btn btn-primary btn-full" type="submit">
+            <span>Sign in</span><span aria-hidden="true">↗</span>
+          </button>
+        </form>
+
+        <div class="demo-access">
+          <div class="demo-title">
+            <span>DEMO ACCESS</span><span class="demo-line"></span>
+          </div>
+          <p>Choose a role to fill in a demo account. All demo accounts use <code>Demo@1234</code>.</p>
+
+          <div class="demo-account-grid">
+            <button type="button" class="demo-account" data-demo="student">
+              <span class="demo-avatar avatar-violet">RC</span>
+              <span><strong>Student</strong><small>Book &amp; join queues</small></span>
+              <span class="demo-arrow">↗</span>
+            </button>
+
+            <button type="button" class="demo-account" data-demo="owner">
+              <span class="demo-avatar avatar-amber">MI</span>
+              <span><strong>Lab owner</strong><small>Review &amp; manage</small></span>
+              <span class="demo-arrow">↗</span>
+            </button>
+
+            <button type="button" class="demo-account" data-demo="admin">
+              <span class="demo-avatar avatar-green">AD</span>
+              <span><strong>Admin</strong><small>View all activity</small></span>
+              <span class="demo-arrow">↗</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="login-footer">
+          <span>© 2026 Standby</span>
+          <span><span class="secure-dot"></span> Frontend demo environment</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main application shell -->
+  <div id="appShell" class="app-shell hidden">
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-top">
+        <a class="brand" href="#dashboard" data-nav="dashboard">
+          <span class="brand-mark">S<span>·</span></span>
+          <span>standby<span class="brand-dot">.</span></span>
+        </a>
+        <button id="sidebarClose" class="icon-btn sidebar-close" aria-label="Close navigation">×</button>
+      </div>
+
+      <div class="workspace-switcher">
+        <div class="workspace-icon">⌘</div>
+        <div><strong>Makerspace Lab</strong><small>Student workspace</small></div>
+        <span class="chevron">⌄</span>
+      </div>
+
+      <div class="nav-label">WORKSPACE</div>
+      <nav class="main-nav" aria-label="Main navigation">
+        <button class="nav-link active" data-nav="dashboard"><span class="nav-icon">◫</span><span>Overview</span></button>
+        <button class="nav-link" data-nav="machines"><span class="nav-icon">▦</span><span>Explore machines</span><span class="nav-count" id="navMachineCount">4</span></button>
+        <button class="nav-link" data-nav="bookings"><span class="nav-icon">▤</span><span>My bookings</span><span class="nav-count" id="navBookingCount">2</span></button>
+        <button class="nav-link" data-nav="standby"><span class="nav-icon">◷</span><span>Standby queue</span><span class="nav-ping"></span></button>
+      </nav>
+
+      <div class="nav-label nav-label-spaced">YOUR ACCOUNT</div>
+      <nav class="main-nav" aria-label="Account navigation">
+        <button class="nav-link" data-nav="score"><span class="nav-icon">✳</span><span>Reliability score</span></button>
+        <button class="nav-link" data-nav="history"><span class="nav-icon">↗</span><span>Activity history</span></button>
+      </nav>
+
+      <div id="staffNavGroup" class="staff-nav-group hidden">
+        <div class="nav-label nav-label-spaced">LAB OPERATIONS</div>
+        <nav class="main-nav" aria-label="Lab operations">
+          <button class="nav-link" data-nav="review"><span class="nav-icon">✓</span><span>Owner review</span><span id="reviewCount" class="nav-count nav-count-hot">2</span></button>
+          <button class="nav-link" data-nav="checkin"><span class="nav-icon">⇄</span><span>Check-in &amp; return</span></button>
+          <button class="nav-link" data-nav="admin"><span class="nav-icon">▥</span><span>Lab overview</span></button>
+        </nav>
+      </div>
+
+      <div class="sidebar-spacer"></div>
+
+      <div class="help-card">
+        <div class="help-icon">✦</div>
+        <strong>Make it count.</strong>
+        <p>Reliable makers get more time with the tools.</p>
+        <button data-nav="score" class="help-link">See your score <span>→</span></button>
+      </div>
+
+      <button id="profileButton" class="sidebar-profile">
+        <span id="sidebarAvatar" class="avatar avatar-violet">RC</span>
+        <span class="profile-copy"><strong id="sidebarName">Ritesh Chhikara</strong><small id="sidebarRole">Trusted member</small></span>
+        <span class="profile-menu">···</span>
+      </button>
+
+      <button id="logoutButton" class="logout-button"><span>↪</span> Sign out</button>
+    </aside>
+
+    <div id="sidebarScrim" class="sidebar-scrim"></div>
+
+    <main class="main-area">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button id="mobileMenu" class="icon-btn mobile-menu" aria-label="Open navigation">☰</button>
+          <div class="breadcrumbs"><span>Workspace</span><span class="crumb-slash">/</span><strong id="breadcrumbTitle">Overview</strong></div>
+        </div>
+
+        <div class="topbar-actions">
+          <span class="environment-badge"><span class="pulse-dot"></span> DEMO MODE</span>
+          <button id="themeToggle" class="icon-btn theme-btn" aria-label="Toggle dark mode">☾</button>
+          <button id="topProfile" class="top-profile">
+            <span id="topAvatar" class="avatar avatar-violet">RC</span>
+            <span class="top-profile-copy"><strong id="topName">Ritesh C.</strong><small id="topTier">Trusted · 85</small></span>
+            <span class="chevron">⌄</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="page-wrap">
+
+        <!-- Dashboard -->
+        <section id="dashboardPage" class="page active-page">
+          <div class="welcome-row reveal">
+            <div>
+              <div class="eyebrow"><span class="eyebrow-star">✦</span> YOUR CREATIVE SPACE</div>
+              <h1 id="welcomeTitle">Good to see you, Ritesh<span class="wave"> 👋</span></h1>
+              <p class="page-subtitle">Ready to turn your ideas into something real?</p>
+            </div>
+            <button class="btn btn-primary" data-nav="machines">＋ Book a machine <span>↗</span></button>
+          </div>
+
+          <div class="dashboard-grid">
+            <div class="dashboard-main-column">
+              <div class="stat-grid reveal">
+                <article class="stat-card stat-score">
+                  <div class="stat-head"><span>Reliability score</span><span class="stat-icon">✳</span></div>
+                  <div class="stat-value-row"><strong id="dashboardScore">85</strong><span id="dashboardTier" class="tier-pill tier-trusted">Trusted</span></div>
+                  <div class="score-track"><span id="dashboardScoreBar" style="width:85%"></span></div>
+                  <div class="stat-foot"><span id="scoreHint">You’re in the top tier of makers.</span><button data-nav="score" class="text-link">View score ↗</button></div>
+                </article>
+
+                <article class="stat-card">
+                  <div class="stat-head"><span>Active bookings</span><span class="stat-icon icon-blue">▤</span></div>
+                  <div class="stat-value-row"><strong id="activeBookingsStat">2</strong><span class="stat-trend trend-neutral">Upcoming</span></div>
+                  <p class="stat-description">Sessions on your schedule</p>
+                  <div class="stat-foot"><span id="nextBookingHint">Next up tomorrow</span><button data-nav="bookings" class="text-link">View all ↗</button></div>
+                </article>
+
+                <article class="stat-card">
+                  <div class="stat-head"><span>Available machines</span><span class="stat-icon icon-green">▦</span></div>
+                  <div class="stat-value-row"><strong id="availableMachinesStat">3</strong><span class="stat-trend trend-good"><span class="tiny-dot"></span> Ready to use</span></div>
+                  <p class="stat-description">Tools ready for your next build</p>
+                  <div class="stat-foot"><span>Updated just now</span><button data-nav="machines" class="text-link">Explore ↗</button></div>
+                </article>
+              </div>
+
+              <div class="section-heading">
+                <div><span class="eyebrow">YOUR NEXT BUILD</span><h2>Upcoming bookings<span class="brand-dot">.</span></h2></div>
+                <button class="text-link" data-nav="bookings">All bookings ↗</button>
+              </div>
+              <div id="dashboardBookings" class="booking-preview-list"></div>
+
+              <div class="section-heading">
+                <div><span class="eyebrow">READY WHEN YOU ARE</span><h2>Find your next tool<span class="brand-dot">.</span></h2></div>
+                <button class="text-link" data-nav="machines">All machines ↗</button>
+              </div>
+              <div id="dashboardMachines" class="machine-preview-grid"></div>
+            </div>
+
+            <aside class="dashboard-side-column">
+              <div class="panel score-mini-panel">
+                <div class="panel-heading"><div><h3>Your reliability</h3><p>Trust makes access easier.</p></div><span class="panel-heading-icon">✳</span></div>
+                <div class="score-mini">
+                  <div id="miniScoreRing" class="score-ring"><div><strong id="miniScore">85</strong><span>out of 100</span></div></div>
+                  <span id="miniTier" class="tier-pill tier-trusted">Trusted maker</span>
+                  <p id="miniScoreCopy">Keep showing up on time to unlock more access.</p>
+                  <button class="btn btn-secondary btn-full" data-nav="score">Explore your score</button>
+                </div>
+              </div>
+
+              <div class="panel queue-mini-panel">
+                <div class="panel-heading"><div><h3>Standby queue</h3><p>Make a spot when sessions fill up.</p></div><span class="panel-heading-icon">◷</span></div>
+                <div id="dashboardQueue"></div>
+                <button class="text-link" data-nav="standby">View standby queue ↗</button>
+              </div>
+
+              <div class="panel quick-tip-panel">
+                <div class="tip-icon">✦</div>
+                <span class="eyebrow">MAKER TIP</span>
+                <h3>Small habits, bigger access.</h3>
+                <p>Check in on time, return tools clean, and report issues honestly. Your reliability score reflects your track record.</p>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <!-- Machines -->
+        <section id="machinesPage" class="page hidden">
+          <div class="page-title-row">
+            <div><div class="eyebrow">THE TOOLKIT</div><h1>Explore machines<span class="brand-dot">.</span></h1><p class="page-subtitle">Find the right equipment for your next idea.</p></div>
+            <button class="btn btn-primary" data-action="open-booking">＋ New booking <span>↗</span></button>
+          </div>
+          <div class="machine-toolbar">
+            <div class="search-field"><span>⌕</span><input id="machineSearch" type="search" placeholder="Search machines…" aria-label="Search machines" /></div>
+            <div class="filter-group" id="machineFilters">
+              <button class="filter-chip active" data-filter="all">All machines</button>
+              <button class="filter-chip" data-filter="available">Available</button>
+              <button class="filter-chip" data-filter="busy">In use</button>
+              <button class="filter-chip" data-filter="training">Training required</button>
+            </div>
+          </div>
+          <div id="machineGrid" class="machine-grid"></div>
+        </section>
+
+        <!-- Bookings -->
+        <section id="bookingsPage" class="page hidden">
+          <div class="page-title-row">
+            <div><div class="eyebrow">YOUR TIME, ORGANIZED</div><h1>My bookings<span class="brand-dot">.</span></h1><p class="page-subtitle">Your requests, confirmed sessions, and completed bookings in one place.</p></div>
+            <button class="btn btn-primary" data-action="open-booking">＋ Book a machine <span>↗</span></button>
+          </div>
+          <div class="booking-summary-grid">
+            <div class="summary-tile"><span class="summary-icon summary-icon-blue">▤</span><div><strong id="bookingSummaryActive">2</strong><span>Upcoming sessions</span></div></div>
+            <div class="summary-tile"><span class="summary-icon summary-icon-amber">◷</span><div><strong id="bookingSummaryPending">1</strong><span>Awaiting approval</span></div></div>
+            <div class="summary-tile"><span class="summary-icon summary-icon-green">✓</span><div><strong id="bookingSummaryCompleted">3</strong><span>Completed sessions</span></div></div>
+          </div>
+          <div class="booking-tabs" id="bookingTabs">
+            <button class="tab-button active" data-booking-filter="all">All bookings</button>
+            <button class="tab-button" data-booking-filter="upcoming">Upcoming</button>
+            <button class="tab-button" data-booking-filter="pending">Pending</button>
+            <button class="tab-button" data-booking-filter="completed">Completed</button>
+          </div>
+          <div id="bookingList" class="booking-list"></div>
+        </section>
+
+        <!-- Standby -->
+        <section id="standbyPage" class="page hidden">
+          <div class="page-title-row">
+            <div><div class="eyebrow">YOUR PLAN B</div><h1>Standby queue<span class="brand-dot">.</span></h1><p class="page-subtitle">Join a queue for a busy machine and get notified when a slot opens.</p></div>
+          </div>
+          <div class="queue-info-banner"><div class="queue-info-icon">◷</div><div><strong>A fairer way to wait.</strong><p>Queue priority considers reliability tier and the time you joined. Machine training requirements still apply.</p></div></div>
+          <div class="queue-page-grid">
+            <div class="panel"><div class="panel-heading"><div><h3>Machines with a queue</h3><p>Join a standby list if your preferred slot is busy.</p></div></div><div id="queueMachineList"></div></div>
+            <div class="panel"><div class="panel-heading"><div><h3>Your queue positions</h3><p>Track where you stand.</p></div></div><div id="myQueueList"></div></div>
+          </div>
+        </section>
+
+        <!-- Reliability score -->
+        <section id="scorePage" class="page hidden">
+          <div class="page-title-row">
+            <div><div class="eyebrow">TRUST IS EARNED</div><h1>Reliability score<span class="brand-dot">.</span></h1><p class="page-subtitle">A transparent score based on how responsibly you use shared equipment.</p></div>
+          </div>
+          <div class="score-overview-grid">
+            <div class="panel score-large-panel">
+              <div class="score-large-copy"><span class="eyebrow">YOUR CURRENT SCORE</span><h2><span id="largeScore">85</span><small>/100</small></h2><span id="largeTier" class="tier-pill tier-trusted">Trusted maker</span><p id="largeScoreMessage">Your track record helps you access more tools.</p></div>
+              <div id="largeScoreRing" class="score-ring score-ring-large"><div><strong id="largeRingScore">85</strong><span>reliability</span></div></div>
+            </div>
+            <div class="panel tier-benefits-panel"><div class="panel-heading"><div><h3>Your access benefits</h3><p>Rules are examples for the demo.</p></div><span class="panel-heading-icon">✳</span></div><div id="tierRules"></div></div>
+          </div>
+          <div class="section-heading score-history-heading"><div><span class="eyebrow">EVERY ACTION ADDS UP</span><h2>Score breakdown<span class="brand-dot">.</span></h2><p>See what helps your score grow — and what can bring it down.</p></div><button class="text-link" data-nav="history">View full history ↗</button></div>
+          <div id="scoreEvents" class="score-events-grid"></div>
+          <div class="score-rules-note"><span class="notice-icon">ⓘ</span><p><strong>Fairness by design.</strong> Scores are capped between 0 and 100. New demo users start at 50. A real deployment should calculate and validate score changes on the backend.</p></div>
+        </section>
+
+        <!-- Activity history -->
+        <section id="historyPage" class="page hidden">
+          <div class="page-title-row">
+            <div><div class="eyebrow">THE FULL STORY</div><h1>Activity history<span class="brand-dot">.</span></h1><p class="page-subtitle">A transparent timeline of bookings, decisions, check-ins, and score changes.</p></div>
+            <button id="exportHistoryButton" class="btn btn-secondary">↓ Export CSV</button>
+          </div>
+          <div class="history-filter-row">
+            <div class="search-field"><span>⌕</span><input id="historySearch" type="search" placeholder="Search activity…" aria-label="Search activity history" /></div>
+            <select id="historyFilter" aria-label="Filter activity">
+              <option value="all">All activity</option><option value="booking">Bookings</option><option value="score">Score changes</option><option value="queue">Standby</option><option value="review">Reviews</option>
+            </select>
+          </div>
+          <div class="panel history-panel">
+            <div class="panel-heading"><div><h3>Recent activity</h3><p>Events are shown newest first.</p></div><span class="muted tiny" id="historyResultCount">7 events</span></div>
+            <div id="historyTimeline" class="timeline"></div>
+          </div>
+        </section>
+
+        <!-- Owner review -->
+        <section id="reviewPage" class="page hidden">
+          <div class="page-title-row">
+            <div><div class="eyebrow">LAB OPERATIONS</div><h1>Owner review<span class="brand-dot">.</span></h1><p class="page-subtitle">Every decision has a reason. Every slot should go to someone ready to use it.</p></div>
+            <span class="live-status"><span class="pulse-dot"></span> Staff workspace</span>
+          </div>
+          <div class="review-summary-grid">
+            <div class="summary-tile"><span class="summary-icon summary-icon-amber">◷</span><div><strong id="reviewPendingTotal">2</strong><span>Pending requests</span></div></div>
+            <div class="summary-tile"><span class="summary-icon summary-icon-green">✓</span><div><strong id="reviewApprovedTotal">4</strong><span>Approved today</span></div></div>
+            <div class="summary-tile"><span class="summary-icon">↗</span><div><strong id="reviewQueueTotal">3</strong><span>People in standby</span></div></div>
+          </div>
+          <div class="review-grid">
+            <div class="panel">
+              <div class="panel-heading"><div><h3>Requests to review</h3><p>Check the eligibility summary before deciding.</p></div><span id="pendingBadge" class="status-chip status-pending">2 pending</span></div>
+              <div id="reviewRequests" class="review-request-list"></div>
+            </div>
+            <div class="panel owner-queue-panel">
+              <div class="panel-heading"><div><h3>Standby order</h3><p>Highest tier first, then earliest join time.</p></div></div>
+              <div id="ownerQueueList"></div>
+              <div class="queue-rule-note">Queue priority is calculated by reliability tier, then join timestamp. Machine training is always required when applicable.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Check-in and return -->
+        <section id="checkinPage" class="page hidden">
+          <div class="page-title-row">
+            <div><div class="eyebrow">RESPONSIBLE TOOL USE</div><h1>Check-in &amp; return<span class="brand-dot">.</span></h1><p class="page-subtitle">Document machine condition before and after each session.</p></div>
+            <span class="status-chip status-approved">Sample booking B-009</span>
+          </div>
+          <div class="checkin-booking-banner">
+            <div class="booking-emoji art-orange">⚙</div>
+            <div><strong>Laser Cutter</strong><span>Aarav Mehta · Friday, 14:00–16:00</span><small>Makerspace, Room 2 · Training verified</small></div>
+            <span class="status-chip status-pending">Ready for check-in</span>
+          </div>
+          <div class="checkin-grid">
+            <form id="checkinForm" class="panel checklist-panel">
+              <div class="panel-heading"><div><h3>Before you begin</h3><p>Check the machine and its accessories.</p></div><span class="checklist-number">01</span></div>
+              <div id="beforeChecklist" class="checklist-items"></div>
+              <label for="checkinNotes">Condition notes <span class="muted">(optional)</span></label>
+              <textarea id="checkinNotes" rows="3" placeholder="Record anything unusual before use…"></textarea>
+              <label class="upload-field" for="checkinPhoto"><span class="upload-icon">＋</span><span><strong>Add a condition photo</strong><small>Optional · image file</small></span><input id="checkinPhoto" type="file" accept="image/*" /></label>
+              <p id="checkinPhotoName" class="muted tiny"></p>
+              <button class="btn btn-primary btn-full" type="submit">Confirm check-in <span>↗</span></button>
+              <p id="checkinStatus" class="inline-status" role="status"></p>
+            </form>
+
+            <form id="returnForm" class="panel checklist-panel">
+              <div class="panel-heading"><div><h3>When you’re done</h3><p>Leave the space ready for the next maker.</p></div><span class="checklist-number checklist-number-green">02</span></div>
+              <div id="returnChecklist" class="checklist-items"></div>
+              <label for="returnCondition">Machine condition</label>
+              <select id="returnCondition"><option value="same">Same as before</option><option value="wear">Minor wear</option><option value="damage">Damage reported</option></select>
+              <div id="damageDetailsWrap" class="damage-details hidden">
+                <label for="damageDetails">Describe the issue <span class="required-mark">*</span></label>
+                <textarea id="damageDetails" rows="3" placeholder="Describe the damage or safety issue…"></textarea>
+                <p class="muted tiny">The owner reviews damage reports before any score change.</p>
+              </div>
+              <label for="returnNotes">Return notes <span class="muted">(optional)</span></label>
+              <textarea id="returnNotes" rows="3" placeholder="Anything the owner should know…"></textarea>
+              <button class="btn btn-primary btn-full" type="submit">Record return <span>↗</span></button>
+              <p id="returnStatus" class="inline-status" role="status"></p>
+            </form>
+          </div>
+        </section>
+
+        <!-- Admin overview -->
+        <section id="adminPage" class="page hidden">
+          <div class="page-title-row">
+            <div><div class="eyebrow">SYSTEM PULSE</div><h1>Lab overview<span class="brand-dot">.</span></h1><p class="page-subtitle">A quick look at machine availability, requests, and member reliability.</p></div>
+            <span class="live-status"><span class="pulse-dot"></span> Demo data</span>
+          </div>
+          <div class="admin-metrics-grid">
+            <div class="admin-metric panel"><span class="admin-metric-icon">▦</span><span>Total machines</span><strong id="adminMachineTotal">4</strong><small>Across the makerspace</small></div>
+            <div class="admin-metric panel"><span class="admin-metric-icon admin-amber">◷</span><span>Pending requests</span><strong id="adminPendingTotal">2</strong><small>Need owner review</small></div>
+            <div class="admin-metric panel"><span class="admin-metric-icon admin-green">✓</span><span>Confirmed bookings</span><strong id="adminConfirmedTotal">3</strong><small>Upcoming sessions</small></div>
+            <div class="admin-metric panel"><span class="admin-metric-icon admin-violet">↗</span><span>Queue memberships</span><strong id="adminQueueTotal">2</strong><small>Across all machines</small></div>
+          </div>
+          <div class="admin-grid">
+            <div class="panel">
+              <div class="panel-heading"><div><h3>Machine status</h3><p>Availability in the sample environment.</p></div><button class="text-link" data-nav="machines">Manage view ↗</button></div>
+              <div id="adminMachineStatus"></div>
+            </div>
+            <div class="panel">
+              <div class="panel-heading"><div><h3>Recent decisions</h3><p>Latest owner and system actions.</p></div><button class="text-link" data-nav="history">Full history ↗</button></div>
+              <div id="adminRecentEvents"></div>
+            </div>
+          </div>
+          <div class="score-rules-note"><span class="notice-icon">ⓘ</span><p><strong>Demo environment.</strong> This dashboard uses browser storage and sample data. Connect your Flask API before using it with real users or equipment.</p></div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- Booking dialog -->
+  <div id="bookingModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="bookingModalTitle">
+    <div class="modal-card">
+      <div class="modal-top">
+        <div><span class="eyebrow">RESERVE YOUR WORKSPACE</span><h2 id="bookingModalTitle">Book a machine<span class="brand-dot">.</span></h2><p>Choose a time that works for your project.</p></div>
+        <button id="closeBookingModal" class="icon-btn" aria-label="Close booking form">×</button>
+      </div>
+
+      <form id="bookingForm" class="form-stack">
+        <label for="bookingMachine">Machine</label>
+        <select id="bookingMachine" required></select>
+        <div id="bookingEligibility" class="eligibility-note"></div>
+
+        <div class="form-two-col">
+          <div><label for="bookingDate">Date</label><input id="bookingDate" type="date" required /></div>
+          <div><label for="bookingTime">Start time</label><select id="bookingTime" required>
+            <option value="09:00">09:00 AM</option><option value="10:00">10:00 AM</option><option value="11:00">11:00 AM</option><option value="12:00">12:00 PM</option><option value="13:00">01:00 PM</option><option value="14:00">02:00 PM</option><option value="15:00">03:00 PM</option><option value="16:00">04:00 PM</option>
+          </select></div>
+        </div>
+
+        <label for="bookingDuration">Session length</label>
+        <select id="bookingDuration" required>
+          <option value="1">1 hour</option><option value="2">2 hours</option><option value="3">3 hours</option><option value="4">4 hours</option>
+        </select>
+
+        <p id="bookingError" class="form-error" role="alert" hidden></p>
+        <button class="btn btn-primary btn-full" type="submit">Request booking <span>↗</span></button>
+        <p class="modal-fineprint">Availability and approvals are simulated in this frontend demo.</p>
+      </form>
+    </div>
+  </div>
+
+  <script src="index.js"></script>
+</body>
+</html>
