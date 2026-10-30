@@ -1,5 +1,5 @@
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from datetime import datetime, timedelta, timezone
 import sqlite3
 from pathlib import Path
@@ -91,12 +91,13 @@ def init_db():
     finally:
         conn.close()
 
-@app.get("/")
+@app.route("/")
 def home():
-    return jsonify({
-        "app": "Standby",
-        "message": "Backend is running!"
-    })
+    return send_from_directory("frontend", "index.html")
+
+@app.route("/<path:filename>")
+def frontend_files(filename):
+    return send_from_directory("frontend", filename)
 
 
 @app.get("/api/health")
