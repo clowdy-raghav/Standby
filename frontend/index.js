@@ -1421,7 +1421,7 @@ function initializeBookingSystem() {
         };
 
         try {
-    const response = await fetch("http://127.0.0.1:5000/api/bookings", {
+    const response = await fetch("https://stand-by-0xn3.onrender.com/api/bookings", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
