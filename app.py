@@ -3,8 +3,10 @@ from flask import Flask, jsonify, request
 from datetime import datetime, timedelta, timezone
 import sqlite3
 from pathlib import Path
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 
 DB_PATH = Path(__file__).with_name("standby.db")
 

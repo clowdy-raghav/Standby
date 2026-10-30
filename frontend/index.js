@@ -1337,9 +1337,10 @@ function initializeBookingSystem() {
         dateInput.min = localToday;
     }
 
-    form.addEventListener("submit", function (event) {
+    form.addEventListener("submit", async function (event) {
         event.preventDefault();
         console.log("BOOKING FORM SUBMITTED");
+        console.log("BOOKING HANDLER RUNNING");
 
         if (errorElement) {
             errorElement.hidden = true;
@@ -1419,8 +1420,39 @@ function initializeBookingSystem() {
             createdAt: new Date().toISOString()
         };
 
-        bookings.push(booking);
-        saveBookings(bookings);
+        try {
+    const response = await fetch("http://127.0.0.1:5000/api/bookings", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            user_name: currentUser.name,
+            slot_name: machine.name,
+            start_time: `${date}T${startTime}`
+        })
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+        throw new Error(result.error || "Booking failed");
+    }
+
+    bookings.push(booking);
+    saveBookings(bookings);
+
+    closeBookingModal();
+    form.reset();
+    renderBookings();
+    renderDashboardStats();
+
+    showToast("Booking successfully submitted to the backend!", "success");
+
+} catch (error) {
+    console.error("Backend booking error:", error);
+    showToast(error.message || "Could not connect to backend.", "error");
+}
 
         closeBookingModal();
         form.reset();
@@ -1451,6 +1483,20 @@ function initializeBookingSystem() {
     document.addEventListener("keydown", function (event) {
         if (event.key === "Escape") closeBookingModal();
     });
+    const submitButton = document.getElementById("forceBookingSubmit");
+
+if (submitButton) {
+    submitButton.addEventListener("click", function () {
+        const form = document.getElementById("bookingForm");
+
+        if (!form.reportValidity()) return;
+
+        form.dispatchEvent(new Event("submit", {
+            bubbles: true,
+            cancelable: true
+        }));
+    });
+}
 }
 
 // Format a date for display
