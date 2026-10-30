@@ -156,8 +156,9 @@ function openApplication() {
     }
 
     if (appShell) {
-        appShell.classList.add("active");
-    }
+    appShell.classList.remove("hidden");
+    appShell.classList.add("active");
+}
 
     updateUserInformation();
     configureRoleNavigation();
